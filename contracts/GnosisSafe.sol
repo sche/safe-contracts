@@ -113,7 +113,7 @@ contract GnosisSafe is MasterCopy, BaseSafe, SignatureDecoder, SecuredTokenTrans
         // solium-disable-next-line security/no-tx-origin
         address receiver = refundReceiver == address(0) ? tx.origin : refundReceiver;
         if (gasToken == address(0)) {
-                // solium-disable-next-line security/no-send
+            // solium-disable-next-line security/no-send
             require(receiver.send(amount), "Could not pay gas costs with ether");
         } else {
             require(transferToken(gasToken, receiver, amount), "Could not pay gas costs with token");
