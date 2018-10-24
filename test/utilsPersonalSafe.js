@@ -48,7 +48,7 @@ let executeTransactionWithSigner = async function(signer, safe, subject, account
     if (txGasToken != 0) {
         gasPrice = 1
     }
-    if (opts.estimated) {
+    if (opts && opts.estimated) {
         await opts.estimated(safe, to, value, data, operation, dataGasEstimate, txGasEstimate, txGasToken, gasPrice, refundReceiver)
     }
     let sigs = await signer(to, value, data, operation, txGasEstimate, dataGasEstimate, gasPrice, txGasToken, refundReceiver, nonce)
