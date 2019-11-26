@@ -15,29 +15,42 @@ contract('DailyLimitModule', function(accounts) {
     let lw
 
     const CALL = 0
+    const DELEGATE = 1
 
     beforeEach(async function () {
         // Create lightwallet
         lw = await utils.createLightwallet()
         // Create Master Copies
         let proxyFactory = await ProxyFactory.new()
-        let createAndAddModules = await CreateAndAddModules.new()
         let gnosisSafeMasterCopy = await utils.deployContract("deploying Gnosis Safe Mastercopy", GnosisSafe)
         // Initialize safe master copy
         gnosisSafeMasterCopy.setup([accounts[0]], 1, 0, "0x", 0, 0, 0)
-        let dailyLimitModuleMasterCopy = await DailyLimitModule.new()
-        // Initialize module master copy
-        dailyLimitModuleMasterCopy.setup([], [])
-        // Create Gnosis Safe and Daily Limit Module in one transactions
-        let moduleData = await dailyLimitModuleMasterCopy.contract.setup.getData([0], [100])
-        let proxyFactoryData = await proxyFactory.contract.createProxy.getData(dailyLimitModuleMasterCopy.address, moduleData)
-        let modulesCreationData = utils.createAndAddModulesData([proxyFactoryData])
-        let createAndAddModulesData = createAndAddModules.contract.createAndAddModules.getData(proxyFactory.address, modulesCreationData)
-        let gnosisSafeData = await gnosisSafeMasterCopy.contract.setup.getData([lw.accounts[0], lw.accounts[1], accounts[0]], 2, createAndAddModules.address, createAndAddModulesData, 0, 0, 0)
+        // Create Gnosis Safe
+        let gnosisSafeData = await gnosisSafeMasterCopy.contract.setup.getData([lw.accounts[0], lw.accounts[1], accounts[0]], 2, 0, "0x", 0, 0, 0)
         gnosisSafe = utils.getParamFromTxEvent(
             await proxyFactory.createProxy(gnosisSafeMasterCopy.address, gnosisSafeData),
-            'ProxyCreation', 'proxy', proxyFactory.address, GnosisSafe, 'create Gnosis Safe and Daily Limit Module',
+            'ProxyCreation', 'proxy', proxyFactory.address, GnosisSafe, 'create Gnosis Safe Proxy',
         )
+
+        // Create Daily Limit Module
+        let dailyLimitModuleMasterCopy = await DailyLimitModule.new()
+        dailyLimitModuleMasterCopy.setup([], [])
+
+        let createAndAddModules = await CreateAndAddModules.new()
+        let dailyLimitModuleData = await dailyLimitModuleMasterCopy.contract.setup.getData([0], [100])
+        let dailyLimitProxyFactoryData = await proxyFactory.contract.createProxy.getData(dailyLimitModuleMasterCopy.address, dailyLimitModuleData)
+        // TODO: have a deeper understanding of this
+        let modulesCreationData = utils.createAndAddModulesData([dailyLimitProxyFactoryData])
+        let createAndAddModulesData = createAndAddModules.contract.createAndAddModules.getData(proxyFactory.address, modulesCreationData)
+
+        let nonce = await gnosisSafe.nonce()
+        let transactionHash = await gnosisSafe.getTransactionHash(createAndAddModules.address, 0, createAndAddModulesData, DELEGATE, 0, 0, 0, 0, 0, nonce)
+        let sig = utils.signTransaction(lw, [lw.accounts[0], lw.accounts[1]], transactionHash)
+        utils.logGasUsage(
+            'execTransaction enable daily limit module',
+            await gnosisSafe.execTransaction(createAndAddModules.address, 0, createAndAddModulesData, DELEGATE, 0, 0, 0, 0, 0, sig)
+        )
+
         let modules = await gnosisSafe.getModules()
         dailyLimitModule = DailyLimitModule.at(modules[0])
         assert.equal(await dailyLimitModule.manager.call(), gnosisSafe.address)
