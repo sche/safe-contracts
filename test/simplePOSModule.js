@@ -34,7 +34,7 @@ contract('SimplePOSModule', function(accounts) {
         simplePOSModuleMasterCopy.setup(0)
 
         let createAndAddModules = await CreateAndAddModules.new()
-        let simplePOSModuleData = await simplePOSModuleMasterCopy.contract.setup.getData(0.1)
+        let simplePOSModuleData = await simplePOSModuleMasterCopy.contract.setup.getData(10)
         let simplePOSProxyFactoryData = await proxyFactory.contract.createProxy.getData(simplePOSModuleMasterCopy.address, simplePOSModuleData)
 
         let modulesCreationData = utils.createAndAddModulesData([simplePOSProxyFactoryData])
@@ -53,7 +53,16 @@ contract('SimplePOSModule', function(accounts) {
         assert.equal(await simplePOSModule.manager.call(), gnosisSafe.address)
     })
 
-    it('should do nothing', async () => {
-
+    it('should split incoming Eth into buckets', async () => {
+        // Pay 1 eth        
+        await web3.eth.sendTransaction({from: accounts[0], to: simplePOSModule.address, value: web3.toWei(1, 'ether')})
+        // 90% goes to the Safe
+        assert.equal(await web3.eth.getBalance(gnosisSafe.address).toNumber(), web3.toWei(0.9, 'ether'))
+        // 10% goes to Module
+        assert.equal(await web3.eth.getBalance(simplePOSModule.address).toNumber(), web3.toWei(0.1, 'ether'))
     })
+
+    // it('should mint new tokens on incoming Eth', async () => {
+        
+    // })
 });
