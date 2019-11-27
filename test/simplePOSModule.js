@@ -3,7 +3,8 @@ const utils = require('./utils/general')
 const GnosisSafe = artifacts.require("./GnosisSafe.sol");
 const CreateAndAddModules = artifacts.require("./libraries/CreateAndAddModules.sol");
 const ProxyFactory = artifacts.require("./ProxyFactory.sol");
-const SimplePOSModule = artifacts.require("./modules/SimplePOSModule.sol");
+const SimplePOSModule = artifacts.require("./modules/SimplePOS/SimplePOSModule.sol");
+const SimplePOSToken = artifacts.require("./modules/SimplePOS/SimplePOSToken.sol");
 
 contract('SimplePOSModule', function(accounts) {
 
@@ -31,10 +32,10 @@ contract('SimplePOSModule', function(accounts) {
 
         // Create SimplePOS module
         let simplePOSModuleMasterCopy = await SimplePOSModule.new()
-        simplePOSModuleMasterCopy.setup(0)
+        simplePOSModuleMasterCopy.setup(0, "", "")
 
         let createAndAddModules = await CreateAndAddModules.new()
-        let simplePOSModuleData = await simplePOSModuleMasterCopy.contract.setup.getData(10)
+        let simplePOSModuleData = await simplePOSModuleMasterCopy.contract.setup.getData(10, "My Token Name", "My Token Symbol")
         let simplePOSProxyFactoryData = await proxyFactory.contract.createProxy.getData(simplePOSModuleMasterCopy.address, simplePOSModuleData)
 
         let modulesCreationData = utils.createAndAddModulesData([simplePOSProxyFactoryData])
@@ -51,6 +52,9 @@ contract('SimplePOSModule', function(accounts) {
         let modules = await gnosisSafe.getModules()
         simplePOSModule = SimplePOSModule.at(modules[0])
         assert.equal(await simplePOSModule.manager.call(), gnosisSafe.address)
+
+        let token = SimplePOSToken.at(await simplePOSModule.simplePOSToken())
+        assert.equal(await token.totalSupply(), 0)
     })
 
     it('should split incoming Eth into buckets', async () => {
@@ -62,7 +66,7 @@ contract('SimplePOSModule', function(accounts) {
         assert.equal(await web3.eth.getBalance(simplePOSModule.address).toNumber(), web3.toWei(0.1, 'ether'))
     })
 
-    // it('should mint new tokens on incoming Eth', async () => {
-        
-    // })
+    it('should mint new tokens on incoming Eth', async () => {
+    })
+
 });
