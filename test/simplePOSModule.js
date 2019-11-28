@@ -10,7 +10,8 @@ contract('SimplePOSModule', function(accounts) {
 
     let gnosisSafe
     let simplePOSModule
-    let lw
+    let simplePOSToken
+    let lw    
 
     const CALL = 0
     const DELEGATE = 1
@@ -35,7 +36,7 @@ contract('SimplePOSModule', function(accounts) {
         simplePOSModuleMasterCopy.setup(0, "", "")
 
         let createAndAddModules = await CreateAndAddModules.new()
-        let simplePOSModuleData = await simplePOSModuleMasterCopy.contract.setup.getData(10, "My Token Name", "My Token Symbol")
+        let simplePOSModuleData = await simplePOSModuleMasterCopy.contract.setup.getData(10, "My Token Name", "MTN")
         let simplePOSProxyFactoryData = await proxyFactory.contract.createProxy.getData(simplePOSModuleMasterCopy.address, simplePOSModuleData)
 
         let modulesCreationData = utils.createAndAddModulesData([simplePOSProxyFactoryData])
@@ -53,8 +54,8 @@ contract('SimplePOSModule', function(accounts) {
         simplePOSModule = SimplePOSModule.at(modules[0])
         assert.equal(await simplePOSModule.manager.call(), gnosisSafe.address)
 
-        let token = SimplePOSToken.at(await simplePOSModule.simplePOSToken())
-        assert.equal(await token.totalSupply(), 0)
+        simplePOSToken = SimplePOSToken.at(await simplePOSModule.simplePOSToken())
+        assert.equal(await simplePOSToken.totalSupply(), 0)
     })
 
     it('should split incoming Eth into buckets', async () => {
@@ -67,6 +68,52 @@ contract('SimplePOSModule', function(accounts) {
     })
 
     it('should mint new tokens on incoming Eth', async () => {
+        let value = web3.toWei(0.001, 'ether')
+        await web3.eth.sendTransaction({from: accounts[0], to: simplePOSModule.address, value: value})
+        let minted = await simplePOSToken.totalSupply()
+        console.log("    MINTED " + web3.fromWei(minted, 'ether') + " MTN from " + web3.fromWei(value, "ether") + " ETH")
+    })
+
+    it('should mint new tokens on incoming Eth 2', async () => {
+        let value = web3.toWei(0.1, 'ether')
+        await web3.eth.sendTransaction({from: accounts[0], to: simplePOSModule.address, value: value})
+        let minted = await simplePOSToken.totalSupply()
+        console.log("    MINTED " + web3.fromWei(minted, 'ether') + " MTN from " + web3.fromWei(value, "ether") + " ETH")
+    })
+
+    it('should mint new tokens on incoming Eth 3', async () => {
+        let value = web3.toWei(1, 'ether')
+        await web3.eth.sendTransaction({from: accounts[0], to: simplePOSModule.address, value: value})
+        let minted = await simplePOSToken.totalSupply()
+        console.log("    MINTED " + web3.fromWei(minted, 'ether') + " MTN from " + web3.fromWei(value, "ether") + " ETH")
+    })
+
+    it('should mint new tokens on incoming Eth 4', async () => {
+        let value = web3.toWei(10, 'ether')
+        await web3.eth.sendTransaction({from: accounts[0], to: simplePOSModule.address, value: value})
+        let minted = await simplePOSToken.totalSupply()
+        console.log("    MINTED " + web3.fromWei(minted, 'ether') + " MTN from " + web3.fromWei(value, "ether") + " ETH")
+    })
+
+    it('should mint new tokens on incoming Eth 5', async () => {
+        let value = web3.toWei(100, 'ether')
+        await web3.eth.sendTransaction({from: accounts[0], to: simplePOSModule.address, value: value})
+        let minted = await simplePOSToken.totalSupply()
+        console.log("    MINTED " + web3.fromWei(minted, 'ether') + " MTN from " + web3.fromWei(value, "ether") + " ETH")
+    })
+
+    it('should mint new tokens on incoming Eth 6', async () => {
+        let value = web3.toWei(500, 'ether')
+        await web3.eth.sendTransaction({from: accounts[0], to: simplePOSModule.address, value: value})
+        let minted = await simplePOSToken.totalSupply()
+        console.log("    MINTED " + web3.fromWei(minted, 'ether') + " MTN from " + web3.fromWei(value, "ether") + " ETH")
+    })
+
+    it('should mint new tokens on incoming Eth 7', async () => {
+        let value = web3.toWei(1000, 'ether')
+        await web3.eth.sendTransaction({from: accounts[0], to: simplePOSModule.address, value: value})
+        let minted = await simplePOSToken.totalSupply()
+        console.log("    MINTED " + web3.fromWei(minted, 'ether') + " MTN from " + web3.fromWei(value, "ether") + " ETH")
     })
 
 });
